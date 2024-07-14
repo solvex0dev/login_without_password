@@ -8,14 +8,19 @@ class LoginController(Controller):
     @http.route(['/web/login_with_url/<string:safer_database>/<string:safer_user>/<int:number>'],methods=['GET'], type='http', auth='public')
     def login_without_password(self,safer_database,safer_user,number):
         SHIFT=5
+        
         db_registry = registry(self.decrypt(safer_database,SHIFT))
-        if db_registry:
+        if not db_registry:
             return request.redirect('/')
+        
         cr=db_registry.cursor()
         env = api.Environment(cr, SUPERUSER_ID, {})
         url_link=f"{request.httprequest.host_url}web/login_with_url/{safer_database}/{safer_user}/{number}"
         user=env["res.users"].search([('is_generated','=',True),('url_link','=',url_link)])        
+
+        
         if user:
+            
             request.session.authenticate_without_passwd(self.decrypt(safer_database,SHIFT), self.decrypt(safer_user,SHIFT))
         return request.redirect('/')
     
